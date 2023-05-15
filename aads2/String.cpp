@@ -2,24 +2,26 @@
 #include "String.h"
 
 String::String()
-	: m_string(new char[1] {0}), m_size(0)
+	: m_string(new char[8] {0}), length(0), m_capacity(8)
 {
 }
 
 String::String(const char* string)
 {
-	m_size = strlen(string);
+	length = strlen(string);
+	m_capacity = length;
 
-	m_string = new char[m_size + 1];
-	strcpy_s(m_string, m_size + 1, string);
-	m_string[m_size] = '\0';
+	m_string = new char[length + 1];
+	strcpy_s(m_string, length + 1, string);
+	m_string[length] = '\0';
 }
 
 String::String(const String& other)
 {
-	m_size = other.m_size;
+	length = other.length;
+	m_capacity = length;
 
-	char* tmp = new char[m_size + 1];
+	char* tmp = new char[length + 1];
 	strcpy(tmp, other.m_string);
 
 	m_string = tmp;
@@ -28,20 +30,17 @@ String::String(const String& other)
 String::String(String&& other) noexcept
 {
 	m_string = other.m_string;
-	m_size = other.m_size;
+
+	length = other.length;
+	m_capacity = length;
 
 	other.m_string = nullptr;
-	other.m_size = 0;
+	other.length = 0;
 }
 
 String::~String()
 {
 	delete[] m_string;
-}
-
-std::size_t String::length() const
-{
-	return m_size;
 }
 
 char& String::operator[](int idx)
@@ -54,12 +53,50 @@ char String::operator[](int idx) const
 	return m_string[idx];
 }
 
+String& String::operator+=(String& other)
+{
+	length += other.length;
+	m_capacity = length;
+
+	char* tmp = new char[length + 1];
+
+	strcpy(tmp, m_string);
+	strcat(tmp, other.m_string);
+
+	delete[] m_string;
+
+	m_string = tmp;
+
+	return *this;
+}
+
+String& String::operator+=(const char& other)
+{
+	length++;
+	if (length >= m_capacity) {
+		m_capacity = m_capacity * 2 > length ? m_capacity * 2 : length;
+
+		char* tmp = new char[m_capacity + 1];
+		strcpy(tmp, m_string);
+
+		delete[] m_string;
+
+		m_string = tmp;
+	}
+
+	m_string[length - 1] = other;
+	m_string[length] = '\0';
+
+	return *this;
+}
+
 String& String::operator=(const String& other)
 {
 	if (this != &other) {
-		m_size = other.m_size;
+		length = other.length;
+		m_capacity = length;
 
-		char* tmp = new char[m_size + 1];
+		char* tmp = new char[length + 1];
 		strcpy(tmp, other.m_string);
 
 		// swap elements
@@ -79,10 +116,12 @@ String& String::operator=(String&& other) noexcept
 		delete[] m_string;
 
 		m_string = other.m_string;
-		m_size = other.m_size;
+
+		length = other.length;
+		m_capacity = length;
 
 		other.m_string = nullptr;
-		other.m_size = 0;
+		other.length = 0;
 	}
 
 	return *this;
@@ -117,7 +156,7 @@ std::ostream& operator<<(std::ostream& out, const String& string)
 
 std::istream& operator>>(std::istream& in, String& string)
 {
-	char buffer[1024];
+	char buffer[64];
 	in >> buffer;
 
 	string = buffer;

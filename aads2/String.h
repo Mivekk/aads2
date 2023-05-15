@@ -10,11 +10,13 @@ public:
 	String(String&& other) noexcept;
 	~String();
 
-	std::size_t length() const;
+	std::size_t length;
 
 	char& operator[](int idx);
 	char operator[](int idx) const;
 
+	String& operator+=(String& other);
+	String& operator+=(const char& other);
 	String& operator=(const String& other);
 	String& operator=(String&& other) noexcept;
 	bool operator==(const String& other) const;
@@ -25,6 +27,7 @@ public:
 
 private:
 	char* m_string;
-	std::size_t m_size;
+
+	std::size_t m_capacity;
 };
 
